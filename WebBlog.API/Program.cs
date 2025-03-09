@@ -1,3 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using WebBlog.API.DatabaseConnection;
+using WebBlog.API.Interface;
+using WebBlog.API.Repo;
+
 namespace WebBlog.API
 {
     public class Program
@@ -9,6 +14,12 @@ namespace WebBlog.API
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddDbContext<BlogDatabase>(opt =>
+            {
+                opt.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnection"));
+            });
+
+            builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 
             var app = builder.Build();
 
