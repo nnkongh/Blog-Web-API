@@ -7,7 +7,7 @@ namespace WebBlog.API.Repo
 {
     public class BlogRepository : IBlogRepository
     {
-        private readonly BlogDatabase _db;
+        private readonly BlogDatabase _db;  
 
         public BlogRepository(BlogDatabase db) {
             _db = db;

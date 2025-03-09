@@ -15,26 +15,28 @@ namespace WebBlog.API.Controllers
             _repo = repo;
         }
         [HttpGet]
-        public async Task<IEnumerable<Blog>> GetBlogs()
+        public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs()
         {
-            return await _repo.GetAsync();
+            var items = await _repo.GetAsync();
+            return Ok(items);
         }
-        [HttpGet("{id}")]
-        public async Task<Blog?> GetBlog(int id)
+        [HttpGet("{id:int}")] // Route constraint
+        public async Task<ActionResult<Blog?>> GetBlog(int id)
         {
             var blog = await _repo.GetByIdAsync(id);
             if (blog == null)
             {
-                return null;
+                return NotFound();
             }
-            return blog;
+            return Ok(blog);
         }
         [HttpPost]
-        public async Task<Blog> CreateBlog(Blog blog)
+        public async Task<ActionResult<Blog>> CreateBlog(Blog blog)
         {
-            return await _repo.CreateAsync(blog);
+            var item = await _repo.CreateAsync(blog);
+            return CreatedAtAction(nameof(GetBlog), new { id = item.Id }, item);
         }
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<Blog?> UpdateBlog(int id, Blog blog)
         {
             var item = await _repo.UpdateAsync(id, blog);
@@ -44,7 +46,7 @@ namespace WebBlog.API.Controllers
             }
             return item;
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")] // Route constraint    ??Custom Route Regex??
         public async Task<Blog?> DeleteBlog(int id)
         {
             var item = await _repo.DeleteAsync(id);
