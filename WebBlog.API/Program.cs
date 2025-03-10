@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using WebBlog.API.DatabaseConnection;
 using WebBlog.API.Interface;
 using WebBlog.API.Models.Cloudinary;
@@ -20,9 +23,36 @@ namespace WebBlog.API
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnection"));
             });
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                
+            }).AddJwtBearer(x =>
+            {
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    ValidateAudience = true,
+
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidateIssuer = true,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+
+                    ValidateLifetime = true
+
+                };
+            });
+            builder.Services.AddAuthorization();
             builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
             builder.Services.AddScoped<IBlogRepository, BlogRepository>();
             builder.Services.AddScoped<IPhotoService,PhotoService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
           
             var app = builder.Build();
 
@@ -30,6 +60,8 @@ namespace WebBlog.API
 
             app.UseHttpsRedirection();
 
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
