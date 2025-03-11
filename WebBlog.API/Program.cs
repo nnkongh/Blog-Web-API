@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebBlog.API.DatabaseConnection;
 using WebBlog.API.Interface;
+using WebBlog.API.Models;
 using WebBlog.API.Models.Cloudinary;
 using WebBlog.API.Repo;
 using WebBlog.API.Services;
@@ -12,7 +14,7 @@ namespace WebBlog.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +50,13 @@ namespace WebBlog.API
 
                 };
             });
+            builder.Services.AddIdentity<AppUser, IdentityRole>(x =>
+            {
+                x.Password.RequireLowercase = true;
+                x.Password.RequireUppercase = true;
+                x.Password.RequiredLength = 8;
+            })
+                .AddEntityFrameworkStores<BlogDatabase>();
             builder.Services.AddAuthorization();
             builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
             builder.Services.AddScoped<IBlogRepository, BlogRepository>();
@@ -56,9 +65,14 @@ namespace WebBlog.API
           
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            using (var scoped = app.Services.CreateScope())
+            {
+                var services = scoped.ServiceProvider;
+                await RoleService.CreateRoles(services);
+            }
+                // Configure the HTTP request pipeline.
 
-            app.UseHttpsRedirection();
+                app.UseHttpsRedirection();
 
 
             app.UseAuthentication();
@@ -67,7 +81,7 @@ namespace WebBlog.API
 
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

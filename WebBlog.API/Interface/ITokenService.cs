@@ -1,7 +1,10 @@
-﻿namespace WebBlog.API.Interface
+﻿using WebBlog.API.Models;
+using WebBlog.API.ViewModel.Dto;
+
+namespace WebBlog.API.Interface
 {
     public interface ITokenService
     {
-        public string CreateToken(string email);
+        public Task<string> CreateToken(AppUser model);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebBlog.API.Interface;
 using WebBlog.API.Models;
 using WebBlog.API.ViewModel;
@@ -6,6 +7,7 @@ using WebBlog.API.ViewModel;
 namespace WebBlog.API.Controllers
 {
     [ApiController]
+    [Authorize(Roles = "User,Admin")]
     [Route("api/blog")]
     public class BlogController : ControllerBase
     {
