@@ -9,5 +9,6 @@ namespace WebBlog.API.Interface
         Task<Blog> CreateAsync(Blog blog);
         Task<Blog?> DeleteAsync(int id);
         Task<Blog?> UpdateAsync(int id, Blog blog);
+        Task<IQueryable<Blog>> GetBlogAsQuery();
     }
 }

@@ -37,6 +37,7 @@ namespace WebBlog.API.Controllers
                 UserName = model.UserName,
                 Email = model.Email
             };
+            
             var result = await _userManager.CreateAsync(user, model.Password);
             if(result.Succeeded)
             {
@@ -75,8 +76,8 @@ namespace WebBlog.API.Controllers
             }
             return Ok(new UserDto
             {
-                UserName = user.UserName,
-                Email = user.Email,
+                UserName = user.UserName!,
+                Email = user.Email!,
                 Token = await _token.CreateToken(user)
             });
           

@@ -33,7 +33,11 @@ namespace WebBlog.API.Repo
             var items = await _db.Blogs.ToListAsync();
             return items;
         }
-
+        public async Task<IQueryable<Blog>> GetBlogAsQuery()
+        {
+            var items = await _db.Blogs.ToListAsync();
+            return items.AsQueryable();
+        }
         public async Task<Blog?> GetByIdAsync(int id)
         {
             var item = await _db.Blogs.FirstOrDefaultAsync(x => x.Id == id);

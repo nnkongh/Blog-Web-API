@@ -62,7 +62,21 @@ namespace WebBlog.API
             builder.Services.AddScoped<IBlogRepository, BlogRepository>();
             builder.Services.AddScoped<IPhotoService,PhotoService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
-          
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+            builder.Services.AddCors(opt =>
+            {
+                opt.AddPolicy("AllowReactApp",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:3000")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+
+                    });
+            });
             var app = builder.Build();
 
             using (var scoped = app.Services.CreateScope())
@@ -74,7 +88,7 @@ namespace WebBlog.API
 
                 app.UseHttpsRedirection();
 
-
+            app.UseCors("AllowReactApp");
             app.UseAuthentication();
             app.UseAuthorization();
 
