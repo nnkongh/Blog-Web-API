@@ -4,9 +4,9 @@ using WebBlog.API.Models;
 
 namespace WebBlog.API.DatabaseConnection
 {
-    public class BlogDatabase : IdentityDbContext<AppUser>
+    public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
-       public BlogDatabase(DbContextOptions<BlogDatabase> options) : base(options)
+       public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
         public DbSet<Blog> Blogs { get; set; }

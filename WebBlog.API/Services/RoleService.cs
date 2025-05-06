@@ -9,7 +9,7 @@ namespace WebBlog.API.Services
         public static async Task CreateRoles(IServiceProvider services)
         {
             using var scope = services.CreateScope(); // Create a new scope to obtain scoped services from the DI container 
-            var context = scope.ServiceProvider.GetRequiredService<BlogDatabase>();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<RoleService>>();//
@@ -40,6 +40,7 @@ namespace WebBlog.API.Services
                 else
                 {
                     logger.LogError("Faile to create admin user: {Errors}", string.Join(", ", result.Errors.Select(x => x.Description)));
+
 
                 }
             }

@@ -1,6 +1,7 @@
 # ASP.NET Core
 bin/
 obj/
+Migrations/
 **/Prop	erties/launchSettings.json
 
 # Visual Studio

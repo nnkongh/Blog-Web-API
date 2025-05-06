@@ -8,6 +8,7 @@ using WebBlog.API.Interface;
 using WebBlog.API.Models;
 using WebBlog.API.Models.Cloudinary;
 using WebBlog.API.Repo;
+using WebBlog.API.Repository;
 using WebBlog.API.Services;
 
 namespace WebBlog.API
@@ -21,7 +22,7 @@ namespace WebBlog.API
             // Add services to the container.
 
             builder.Services.AddControllers();
-            builder.Services.AddDbContext<BlogDatabase>(opt =>
+            builder.Services.AddDbContext<ApplicationDbContext>(opt =>
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnection"));
             });
@@ -31,40 +32,60 @@ namespace WebBlog.API
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                
+
+
             }).AddJwtBearer(x =>
             {
                 x.SaveToken = true;
                 x.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    ValidAudience = builder.Configuration["JwtSettings:Audience"],
                     ValidateAudience = true,
 
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
                     ValidateIssuer = true,
 
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]!)),
 
                     ValidateLifetime = true
 
                 };
             });
-            builder.Services.AddIdentity<AppUser, IdentityRole>(x =>
+            builder.Services.AddIdentityCore<AppUser>(x =>
             {
                 x.Password.RequireLowercase = true;
                 x.Password.RequireUppercase = true;
                 x.Password.RequiredLength = 8;
             })
-                .AddEntityFrameworkStores<BlogDatabase>();
+
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+            {
+                opt.TokenLifespan = TimeSpan.FromHours(2);
+
+            });
             builder.Services.AddAuthorization();
             builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
             builder.Services.AddScoped<IBlogRepository, BlogRepository>();
-            builder.Services.AddScoped<IPhotoService,PhotoService>();
+            builder.Services.AddScoped<IPhotoService, PhotoService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole();
-            builder.Logging.SetMinimumLevel(LogLevel.Information);
+            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+
+            var email = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+            builder.Services.AddSingleton(email);
+
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            builder.Services.AddControllers()
+                .AddNewtonsoftJson(opt =>
+                {
+                    opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                });
 
             builder.Services.AddCors(opt =>
             {
@@ -77,6 +98,7 @@ namespace WebBlog.API
 
                     });
             });
+
             var app = builder.Build();
 
             using (var scoped = app.Services.CreateScope())
@@ -84,9 +106,8 @@ namespace WebBlog.API
                 var services = scoped.ServiceProvider;
                 await RoleService.CreateRoles(services);
             }
-                // Configure the HTTP request pipeline.
 
-                app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseCors("AllowReactApp");
             app.UseAuthentication();

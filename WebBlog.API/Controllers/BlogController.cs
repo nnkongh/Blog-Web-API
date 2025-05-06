@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebBlog.API.Helper;
 using WebBlog.API.Interface;
+using WebBlog.API.Mapper;
 using WebBlog.API.Models;
 using WebBlog.API.Models.Pagination;
 using WebBlog.API.ViewModel;
@@ -13,18 +15,19 @@ namespace WebBlog.API.Controllers
     public class BlogController : ControllerBase
     {
         private readonly IBlogRepository _repo;
+        private readonly ILogger<BlogController> _logger;
         private readonly IPhotoService _photo;
 
-        public BlogController(IBlogRepository repo, IPhotoService photo)
+        public BlogController(IBlogRepository repo, IPhotoService photo, ILogger<BlogController> logger)
         {
             _repo = repo;
+            _logger = logger;
             _photo = photo;
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs(Pagination<Blog> blog)
+        public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs([FromQuery] QueryObject query)
         {
-            var blogs = await _repo.GetBlogAsQuery();
-            var items = await Pagination<Blog>.CreateAsync(blogs,blog.PageNumber,blog.Size);
+            var items = await _repo.GetBlogs(query);
             return Ok(items);
         }
         [HttpGet("{id:int}")] // Route constraint
@@ -36,7 +39,7 @@ namespace WebBlog.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(blog);
+            return Ok(blog.MapBlog());
         }
         [HttpPost]
         [Route("createBlog")]
